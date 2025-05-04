@@ -1,0 +1,13 @@
+# Ignore virtual environment
+venv/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore OS junk files
+.DS_Store
+
+# Ignore cloud SDK
+google-cloud-sdk/
+google-cloud-cli-*.tar.gz
