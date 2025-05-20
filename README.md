@@ -1,10 +1,15 @@
 # Stacksync Secure Script Executor
 
-This API service allows execution of arbitrary Python scripts in a secure, sandboxed environment.  
-It's designed for use cases like **Stacksync**, where customers define custom logic for transforming or filtering data during real-time syncs between CRMs and databases.
+This API service enables secure execution of user-submitted Python scripts in a sandboxed environment.
 
-The service uses **Flask** for the API and **nsjail** to securely execute untrusted code locally.  
-In production (Cloud Run), it defaults to a lighter sandbox due to container restrictions.
+It was built for use cases like Stacksync, where customers define custom logic for transforming or filtering data during real-time syncs between CRMs and databases.
+
+🧠 Built with Flask
+
+🔒 Uses nsjail for local sandboxing
+
+☁️ Provides a secure Cloud Run fallback with input validation
+
 
 ---
 
@@ -23,59 +28,103 @@ docker run -p 8080:8080 stacksync-runner .
 ###  Cloud Deployment (Google Cloud Run)
 The API is deployed publicly here:
 
-👉 https://stacksync-runner-klbdcp445q-uc.a.run.app
+👉 https://stacksync-runner-348397166528.us-central1.run.app
 
 Note: Visiting the base URL will return 404 Not Found.
 Use a POST request to the /execute endpoint as shown below.
 
 ## 🚀 API Usage
 
-### POST /execute
+## Tested with postman
 
+
+### POST /execute
+#
 **Request Body:**
 ```json
 {
-  "script": "def main():\n  print('hello')\n  return {\"msg\": \"done\"}"
+  "script": "def main():\n  return {\"msg\": \"Hello World\"}"
 }
-
 ```
 
 **Response Body:**
 ```json
 {
-  "result": {"msg": "done"},
-  "stdout": "hello\n"
+    "note": "running direct execution fallback (nsjail not available in Cloud Run)",
+    "result": {
+        "msg": "Hello World"
+    },
+    "stdout": "{\"msg\": \"Hello World\"}"
+}
+```
+###  POST /execute 
+#
+**Request Body:**
+```json
+{
+  "script": "def main():\n  total = sum([5, 10, 15])\n  return {\"sum\": total}"
 }
 
+```
+**Response Body:**
+```json
+{
+    "note": "running direct execution fallback (nsjail not available in Cloud Run)",
+    "result": {
+        "sum": 30
+    },
+    "stdout": "{\"sum\": 30}"
+}
+```
+### Bad Script ,  POST /execute 
+#
+**Request Body:**
+```json
+{
+  "script": "def main():\n  import os\n  os.system('rm -rf /')\n  return {\"msg\": \"nope\"}"
+}
 
+```
+**Response Body:**
+```json
+{
+    "details": "The script contains one or more unsafe keywords such as 'import os' or 'eval'.",
+    "error": "Blocked script for using restricted keywords"
+}
+```
+## Script Submission Guidelines
+```
+To submit a script, make sure:
+
+You define a main() function
+
+main() returns a JSON-serializable object
+
+Do not call main() or print the result yourself — the system appends a call to main() and handles output parsing.
 ```
 ### Script
 
-curl -X POST https://stacksync-runner-klbdcp445q-uc.a.run.app/execute \
+curl -X POST https://stacksync-runner-348397166528.us-central1.run.app/execute \
   -H "Content-Type: application/json" \
-  -d '{"script": "def main():\n  print(\"Hello from cloud!\")\n  return {\"msg\": \"success\"}"}'
+  -d '{"script": "def main():\n  return {\"msg\": \"Hello World\"}"}'
+
 
 ---
 
 #### . 🔐 **Security Note** (why `nsjail` is only local)
 
 
-Locally, the service uses nsjail to sandbox untrusted code using Linux namespaces.
+Local mode: Uses nsjail to sandbox scripts in a secure namespace with memory and CPU limits.
 
-On Cloud Run, nsjail fails to launch due to restricted system calls (e.g., CLONE_NEWUSER, CLONE_NEWPID), so the script does not execute.
+Cloud Run fallback: Due to restricted system calls (e.g. CLONE_NEWUSER, chroot), nsjail is unavailable in Cloud Run.
 
-The application gracefully logs this and avoids unsafe execution.
+As a fallback, scripts are executed with Python directly — with restricted keywords blocked (import os, subprocess, etc.) to prevent dangerous operations.
 
-Input validation ensures:
-
-A main() function is present
-
-The result is JSON-serializable
-
+⚠️ This fallback is for testing/demo purposes only. In production, execution should be moved to a hardened environment (e.g., GCE with nsjail, or gVisor-based isolation).
 
 ### Submission Info
 GitHub Repo: [[Stacksync executor](https://github.com/andresam321/stacksync-script-executor)]
 
-Cloud Run URL: https://stacksync-runner-klbdcp445q-uc.a.run.app
+Cloud Run Endpoint: https://stacksync-runner-348397166528.us-central1.run.app/execute
 
-Estimated time to complete: ~3–4 hours (including Docker, testing, and deployment)
+Time to Complete: ~5 hours (initial sandboxing, Docker/Cloud Run integration, fallback logic, testing, and documentation)

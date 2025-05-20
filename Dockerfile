@@ -29,6 +29,9 @@ RUN git clone https://github.com/google/nsjail.git /opt/nsjail && \
 # Set working directory
 WORKDIR /app
 
+# Set Cloud Run flag
+ENV CLOUD_RUN=1
+
 # Copy files
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
