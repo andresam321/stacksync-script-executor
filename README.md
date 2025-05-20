@@ -1,16 +1,10 @@
 # Stacksync Secure Script Executor
 
-This API service enables secure execution of user-submitted Python scripts in a sandboxed environment.
+An API service I built to safely execute user-submitted Python scripts within a sandboxed environment. Designed specifically for use cases like Stacksync, where businesses need to define custom logic to transform or filter data during real-time syncs between CRMs and databases.
 
-It was built for use cases like Stacksync, where customers define custom logic for transforming or filtering data during real-time syncs between CRMs and databases.
+🛠️ Tech stack: Flask, nsjail for secure local sandboxing, and Cloud Run for scalable remote fallback with strict input validation.
 
-🧠 Built with Flask
-
-🔒 Uses nsjail for local sandboxing
-
-☁️ Provides a secure Cloud Run fallback with input validation
-
-
+This tool reflects my focus on building practical, secure backend systems that support real-time data workflows — especially for teams that need flexibility without compromising safety.
 ---
 
 ## 🔧 Local Setup
